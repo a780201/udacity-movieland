@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Movielicious</string>
+    <string name="menu_sort_popularity">Most popular</string>
+    <string name="menu_sort_vote_count">Most rated</string>
+    <string name="menu_sort_vote_average">Highest rated</string>
+    <string name="menu_sort_favorites">Favorites</string>
+    <string name="menu_scroll_to_top">Scroll to top</string>
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_about">About</string>
+    <string name="menu_settings">Settings</string>
+    <string name="content_desc_movie">Movie Picture</string>
+    <string name="reviews">Reviews</string>
+    <string name="movie_videos">Trailers</string>
+    <string name="movie_details_rating">Average rating: %1$s</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="placeholder_movie_plot">Twenty-two years after the events of Jurassic Park, Isla Nublar now features a fully functioning dinosaur theme park, Jurassic World, as originally envisioned by John Hammond.         Twenty-two years after the events of Jurassic Park, Isla Nublar now features a fully functioning dinosaur theme park, Jurassic World, as originally envisioned by John Hammond.</string>
+    <string name="menu_share">Share</string>
+    <string name="found_trailer">Found trailer!</string>
+    <string name="failed_loading_video">Videos loading failed.</string>
+    <string name="added_to_favorites">Added to Favorites!</string>
+    <string name="favorites">Favorites</string>
+    <string name="mode_favored">Favorites</string>
+    <string name="mode_sort">Options</string>
+    <string name="mode_sort_popularity">Most popular</string>
+    <string name="mode_sort_vote_count">Most rated</string>
+    <string name="mode_sort_vote_average">Highest rated</string>
+</resources>
