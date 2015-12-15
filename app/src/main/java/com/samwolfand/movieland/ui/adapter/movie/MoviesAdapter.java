@@ -56,15 +56,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
         holder.bind(movies.get(position));
-        holder.itemView.setOnClickListener(v ->{
-            View innerContainer = holder.itemView.findViewById(R.id.container_inner_item);
-            Intent startIntent = new Intent(holder.getParentContext(), MovieActivity.class);
-            startIntent.putExtra(MovieActivity.EXTRA_MOVIE, movies.get(position));
-            ActivityOptionsCompat options = ActivityOptionsCompat
-                    .makeSceneTransitionAnimation((MoviesActivity) v.getContext(), innerContainer, MovieActivity
-                            .TRANSITION_SHARED_ELEMENT);
-            ActivityCompat.startActivity((MoviesActivity) v.getContext(), startIntent, options.toBundle());
-        });
+//
     }
 
     @Override
@@ -111,8 +103,20 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
         public void bind(@NonNull final Movie movie) {
             mFavoriteButton.setSelected(movie.isFavored());
             mTitleView.setText(movie.getTitle());
-            mContentContainer.setOnClickListener(v -> BusProvider.getInstance().post(new MovieClickedEvent("Hello")));
-            mFavoriteButton.setOnClickListener(v -> BusProvider.getInstance().post(new FavoriteClickedEvent()));
+            mContentContainer.setOnClickListener(v -> {
+                View innerContainer = itemView.findViewById(R.id.container_inner_item);
+                Intent startIntent = new Intent(getParentContext(), MovieActivity.class);
+                startIntent.putExtra(MovieActivity.EXTRA_MOVIE, movie);
+                ActivityOptionsCompat options = ActivityOptionsCompat
+                        .makeSceneTransitionAnimation((MoviesActivity) v.getContext(), innerContainer, MovieActivity
+                                .TRANSITION_SHARED_ELEMENT);
+                ActivityCompat.startActivity((MoviesActivity) v.getContext(), startIntent, options.toBundle());
+            });
+            mFavoriteButton.setOnClickListener(v -> {
+                BusProvider.getInstance()
+                        .post(new FavoriteClickedEvent(movie, MovieViewHolder.this.getAdapterPosition()));
+                mFavoriteButton.setSelected(movie.isFavored());
+            });
 
             // prevents unnecessary color blinking
             if (mMovieId != movie.getId()) {

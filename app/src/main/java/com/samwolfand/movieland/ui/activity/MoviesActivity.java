@@ -21,7 +21,10 @@ import com.samwolfand.movieland.ui.adapter.movie.MoviesAdapter;
 import com.samwolfand.movieland.ui.adapter.spinner.ModeSpinnerAdapter;
 import com.samwolfand.movieland.ui.module.MovieModule;
 import com.samwolfand.movieland.ui.otto.BusProvider;
+import com.samwolfand.movieland.ui.otto.FavoriteClickedEvent;
 import com.samwolfand.movieland.ui.otto.MovieClickedEvent;
+import com.samwolfand.movieland.ui.otto.OnModeSelectedEvent;
+import com.samwolfand.movieland.util.PrefUtils;
 import com.squareup.otto.Subscribe;
 
 import java.util.Collections;
@@ -32,11 +35,13 @@ import javax.inject.Inject;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
 public class MoviesActivity extends BaseActivity {
 
     private static final String MODE_FAVORITES = "favorites";
+    private static final java.lang.String STATE_MODE = "state_mode";
     @Bind(R.id.recyclerView)
     RecyclerView recyclerView;
     private ModeSpinnerAdapter spinnerAdapter = new ModeSpinnerAdapter();
@@ -56,6 +61,10 @@ public class MoviesActivity extends BaseActivity {
         gridLayoutManager.setOrientation(GridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(gridLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        mMode = (savedInstanceState != null) ?
+                savedInstanceState.getString(STATE_MODE, Sort.POPULARITY.toString())
+                : PrefUtils.getBrowseMoviesMode(this);
 
         initModeSpinner();
         loadMovies();
@@ -81,6 +90,15 @@ public class MoviesActivity extends BaseActivity {
 
         int itemToSelect = -1;
 
+        if (mMode.equals(MODE_FAVORITES))
+            itemToSelect = 0;
+        else if (mMode.equals(Sort.POPULARITY.toString()))
+            itemToSelect = 2;
+        else if (mMode.equals(Sort.VOTE_COUNT.toString()))
+            itemToSelect = 3;
+        else if (mMode.equals(Sort.VOTE_AVERAGE.toString()))
+            itemToSelect = 4;
+
         View spinnerContainer = LayoutInflater.from(this).inflate(R.layout.widget_toolbar_spinner, toolbar, false);
         ActionBar.LayoutParams lp = new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         toolbar.addView(spinnerContainer, lp);
@@ -90,7 +108,7 @@ public class MoviesActivity extends BaseActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> spinner, View view, int position, long itemId) {
-
+                BusProvider.getInstance().post(new OnModeSelectedEvent(spinnerAdapter.getMode(position)));
             }
 
             @Override
@@ -127,10 +145,46 @@ public class MoviesActivity extends BaseActivity {
         return Collections.<Object>singletonList(new MovieModule());
     }
 
-
-    @Subscribe public void MovieClicked(MovieClickedEvent event) {
+    @Subscribe
+    public void onMovieClicked(MovieClickedEvent event) {
+        Toast.makeText(this, event.getOtto(), Toast.LENGTH_SHORT).show();
 
     }
 
+
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void onModeSelected(OnModeSelectedEvent event) {
+        if (event.getMode().equals(mMode)) return;
+        mMode = event.getMode();
+
+        if (mMode.equals(MODE_FAVORITES)) {
+            moviesRepository.savedMovies()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this::setMovie);
+        } else {
+            moviesRepository.discoverMovies(Sort.fromString(mMode), 3)
+                    .observeOn(Schedulers.io())
+                    .subscribe(this::setMovie, throwable -> {
+                        Timber.e("Error fetching movies");
+                    });
+        }
+    }
+
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void OnFavoredClick(FavoriteClickedEvent event) {
+        Movie movie = event.getMovie();
+        boolean favored = !movie.isFavored();
+        movie.setFavored(favored);
+        if (favored) {
+            moviesRepository.saveMovie(movie);
+            PrefUtils.addToFavorites(this, movie.getId());
+            Toast.makeText(this, "Added to favorites.", Toast.LENGTH_SHORT).show();
+        } else {
+            moviesRepository.deleteMovie(movie);
+            PrefUtils.removeFromFavorites(this, movie.getId());
+        }
+    }
 
 }

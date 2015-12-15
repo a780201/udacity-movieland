@@ -1,7 +1,6 @@
 package com.samwolfand.movieland.ui.fragment;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,14 +8,14 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollView;
@@ -25,27 +24,31 @@ import com.github.ksoichiro.android.observablescrollview.ScrollState;
 import com.github.ksoichiro.android.observablescrollview.ScrollUtils;
 import com.samwolfand.movieland.R;
 import com.samwolfand.movieland.data.model.Movie;
+import com.samwolfand.movieland.data.repository.MoviesRepository;
 import com.samwolfand.movieland.ui.activity.MovieActivity;
 import com.samwolfand.movieland.ui.module.MovieModule;
+import com.samwolfand.movieland.ui.otto.BusProvider;
+import com.samwolfand.movieland.ui.otto.FavoriteClickedEvent;
+import com.samwolfand.movieland.ui.otto.MovieClickedEvent;
 import com.samwolfand.movieland.ui.widget.AspectLockedImageView;
+import com.samwolfand.movieland.util.PrefUtils;
 import com.samwolfand.movieland.util.UiUtils;
 import com.squareup.otto.Subscribe;
 
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.Bind;
 import butterknife.BindColor;
 import butterknife.ButterKnife;
 
 
-
-
-
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link OnFragmentInteractionListener} interface
+ * <p>
  * to handle interaction events.
  * Use the {@link MovieFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -88,6 +91,9 @@ public class MovieFragment extends BaseFragment implements ObservableScrollViewC
     @BindColor(R.color.material_white)
     int colorWhite;
 
+    @Inject
+    MoviesRepository movieRepository;
+
     public MovieFragment() {
         // Required empty public constructor
     }
@@ -118,6 +124,19 @@ public class MovieFragment extends BaseFragment implements ObservableScrollViewC
 
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        BusProvider.getInstance().register(this);
+    }
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        BusProvider.getInstance().unregister(this);
+    }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -160,7 +179,6 @@ public class MovieFragment extends BaseFragment implements ObservableScrollViewC
         mOverview.setText(movie.getOverview());
 
 
-
         Glide.with(this).load("http://image.tmdb.org/t/p/w342/" + movie.getBackdropPath())
                 .placeholder(R.color.movie_cover_placeholder)
                 .centerCrop()
@@ -183,6 +201,14 @@ public class MovieFragment extends BaseFragment implements ObservableScrollViewC
     public void onDetach() {
         super.onDetach();
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            getActivity().onBackPressed();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -220,8 +246,12 @@ public class MovieFragment extends BaseFragment implements ObservableScrollViewC
 
     // OTTO EVENTS
 
+
     @Subscribe
-    
+    public void onMovieClicked(MovieClickedEvent event) {
+        Toast.makeText(getContext(), event.getOtto(), Toast.LENGTH_SHORT).show();
+
+    }
 
 
 }

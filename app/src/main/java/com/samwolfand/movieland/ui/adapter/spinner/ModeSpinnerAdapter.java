@@ -88,11 +88,11 @@ public class ModeSpinnerAdapter extends BaseAdapter {
         return view;
     }
 
-    private String getTitle(int position) {
+    public String getTitle(int position) {
         return position >= 0 && position < mItems.size() ? mItems.get(position).title : "";
     }
 
-    private String getMode(int position) {
+    public String getMode(int position) {
         return position >= 0 && position < mItems.size() ? mItems.get(position).mode : "";
     }
 
